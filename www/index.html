@@ -1,0 +1,98 @@
+<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UK49s Análise</title>
+<style>
+body{font-family:sans-serif;margin:0;padding:12px;background:#111;color:#eee}
+h2{margin:18px 0 6px;font-size:17px;color:#7cf}
+input,select,button{font-size:16px;padding:8px;margin:3px 0;width:100%;box-sizing:border-box;border-radius:6px;border:1px solid #444;background:#222;color:#eee}
+button{background:#27a;border:0}
+.n{display:inline-block;min-width:26px;text-align:center;margin:2px;padding:3px;border-radius:50%;font-size:14px;color:#000}
+.A{background:#6c6}.B{background:#fc5}.C{background:#6bf}
+.box{background:#1b1b1b;padding:8px;border-radius:8px;margin:4px 0;font-size:14px}
+small{color:#999}
+</style></head><body>
+<h1 style="font-size:20px">UK49s – Análise</h1>
+<small>Ferramenta de análise e entretenimento. O sorteio é aleatório.</small>
+
+<h2>Novo resultado</h2>
+<input id="nums" placeholder="Números (6 ou 7), ex: 3 12 25 33 41 49 7">
+<select id="tipo"><option>Brunchtime</option><option>Lunchtime</option><option>Drivetime</option><option>Teatime</option></select>
+<input id="dt" type="datetime-local">
+<button onclick="add()">Guardar resultado</button>
+
+<h2>Estatísticas</h2><div id="st"></div>
+
+<h2>Gerar combinações</h2>
+<select id="k"><option value="3">3 a 3</option><option value="4">4 a 4</option><option value="5">5 a 5</option></select>
+<button onclick="gen()">Gerar 50 combinações</button>
+<div id="out"></div>
+
+<h2>Histórico</h2><div id="hist"></div>
+
+<script>
+const G={A:[1,2,3,4,6,12,13,14,16,23,24,26,34,36,46],
+B:[9,10,19,20,21,29,30,31,32,39,40,41,42,43,49],
+C:[5,7,8,11,15,17,18,22,25,27,28,33,35,37,38,44,45,47,48]};
+const grp=n=>G.A.includes(n)?'A':G.B.includes(n)?'B':'C';
+let R=[];try{R=JSON.parse(localStorage.getItem('r')||'[]')}catch(e){}
+const save=()=>localStorage.setItem('r',JSON.stringify(R));
+const tag=n=>'<span class="n '+grp(n)+'">'+n+'</span>';
+const now=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,16);
+document.getElementById('dt').value=now();
+const $=id=>document.getElementById(id);
+
+function add(){
+ const n=$('nums').value.split(/[\s,;]+/).filter(x=>x).map(Number);
+ if(n.length<6||n.length>7||n.some(x=>!(x>=1&&x<=49))||new Set(n).size!==n.length){alert('Insira 6 ou 7 números diferentes entre 1 e 49');return}
+ R.unshift({d:$('dt').value,t:$('tipo').value,n});save();$('nums').value='';$('dt').value=now();render();
+}
+function del(i){if(confirm('Apagar?')){R.splice(i,1);save();render()}}
+
+function stats(){
+ const f=Array(50).fill(0),lag=Array(50).fill(R.length),P={};
+ R.forEach((r,i)=>{
+  r.n.forEach(x=>{f[x]++;if(lag[x]===R.length)lag[x]=i});
+  const s=[...r.n].sort((a,b)=>a-b);
+  for(let a=0;a<s.length;a++)for(let b=a+1;b<s.length;b++){const k=s[a]+'-'+s[b];P[k]=(P[k]||0)+1}
+ });
+ return{f,lag,P};
+}
+function render(){
+ const{f,lag,P}=stats();
+ const nums=[...Array(49)].map((_,i)=>i+1);
+ const top=[...nums].sort((a,b)=>f[b]-f[a]).slice(0,10);
+ const late=[...nums].sort((a,b)=>lag[b]-lag[a]).slice(0,10);
+ const pairs=Object.entries(P).sort((a,b)=>b[1]-a[1]).slice(0,10);
+ $('st').innerHTML=R.length?
+  '<div class="box">Mais frequentes:<br>'+top.map(n=>tag(n)+'<small>'+f[n]+'x</small>').join(' ')+'</div>'+
+  '<div class="box">Mais atrasados (sorteios sem sair):<br>'+late.map(n=>tag(n)+'<small>'+lag[n]+'</small>').join(' ')+'</div>'+
+  '<div class="box">Pares que mais saem juntos:<br>'+pairs.map(([k,v])=>k.split('-').map(Number).map(tag).join('')+'<small>'+v+'x</small>').join(' ')+'</div>'
+  :'<small>Sem dados ainda.</small>';
+ $('hist').innerHTML=R.map((r,i)=>'<div class="box"><small>'+r.d.replace('T',' ')+' · '+r.t+'</small> <button style="width:auto;padding:2px 8px;float:right;background:#933" onclick="del('+i+')">x</button><br>'+r.n.map(tag).join('')+'</div>').join('');
+}
+
+function pick(pool,w){
+ let t=pool.reduce((s,n)=>s+w(n),0),x=Math.random()*t;
+ for(const n of pool){x-=w(n);if(x<=0)return n}
+ return pool[pool.length-1];
+}
+function gen(){
+ const k=+$('k').value,{f,P}=stats();
+ const pc=(a,b)=>P[Math.min(a,b)+'-'+Math.max(a,b)]||0;
+ const pairs=[['A','B'],['A','C'],['B','C']],out=[],seen=new Set();
+ let tries=0;
+ while(out.length<50&&tries++<30000){
+  const[g1,g2]=pairs[out.length%3];
+  let pool=[...G[g1],...G[g2]],ch=[];
+  while(ch.length<k){
+   const n=pick(pool,x=>(1+f[x])*(1+ch.reduce((s,c)=>s+pc(x,c),0)));
+   ch.push(n);pool=pool.filter(x=>x!==n);
+  }
+  if(!(ch.some(x=>grp(x)===g1)&&ch.some(x=>grp(x)===g2)))continue;
+  ch.sort((a,b)=>a-b);const key=ch.join(',');
+  if(seen.has(key))continue;seen.add(key);out.push({ch,g:g1+g2});
+ }
+ $('out').innerHTML=out.map((o,i)=>'<div class="box"><small>'+(i+1)+'. '+o.g+'</small> '+o.ch.map(tag).join('')+'</div>').join('');
+}
+render();
+</script><script src="imp.js"></script><script src="bak.js"></script></body></html>
