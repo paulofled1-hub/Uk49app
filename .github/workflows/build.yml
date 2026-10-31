@@ -16,7 +16,10 @@ jobs:
           distribution: temurin
           java-version: 17
       - run: npm install
+      - run: npm install --no-save sharp @capacitor/assets
+      - run: node make-icons.js
       - run: npx cap add android
+      - run: npx @capacitor/assets generate --android --iconBackgroundColor '#0d1b2a'
       - run: npx cap sync android
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
