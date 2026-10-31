@@ -3,6 +3,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,7 +24,14 @@ jobs:
       - run: npx @capacitor/assets generate --android --iconBackgroundColor '#0d1b2a'
       - run: npx cap sync android
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - run: cp android/app/build/outputs/apk/debug/app-debug.apk UK49-Desbloqueado.apk
       - uses: actions/upload-artifact@v4
         with:
           name: uk49-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: UK49-Desbloqueado.apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: UK49 Desbloqueado (ultima versao)
+          files: UK49-Desbloqueado.apk
+          make_latest: true
