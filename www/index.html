@@ -36,7 +36,7 @@ C:[5,7,8,11,15,17,18,22,25,27,28,33,35,37,38,44,45,47,48]};
 const grp=n=>G.A.includes(n)?'A':G.B.includes(n)?'B':'C';
 let R=[];try{R=JSON.parse(localStorage.getItem('r')||'[]')}catch(e){}
 const save=()=>localStorage.setItem('r',JSON.stringify(R));
-const tag=n=>'<span class="n '+grp(n)+'">'+n+'</span>';
+const tag=n=>'<span class="n '+grp(n)+'">'+n+'</span> ';
 const now=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,16);
 document.getElementById('dt').value=now();
 const $=id=>document.getElementById(id);
