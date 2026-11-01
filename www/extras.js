@@ -1,5 +1,5 @@
 (function(){
-const VER='1.3.0';window.APP_VER='1.3.0';
+const VER='1.4.0';window.APP_VER='1.4.0';
 const REPO='https://github.com/paulofled1-hub/Uk49app';
 const LINK=REPO+'/releases/download/latest/UK49-Desbloqueado.apk';
 const MSG='UK49 Desbloqueado: app para analisar resultados do UK49s e gerar combinações (ferramenta de análise e entretenimento, sem garantia de acerto). Baixe aqui:';
